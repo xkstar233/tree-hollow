@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">  {# 改为居中显示 #}
+        <h2 class="mb-4 text-center"><i class="bi bi-book"></i> 心理健康自助资源</h2>  {# 修改标题 #}
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    {% for resource in resources %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body text-center">  {# 内容居中 #}
+                                <h5 class="card-title">{{ resource.title }}</h5>
+                                <p class="card-text">{{ resource.description }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent text-center">
+                                <a href="{{ resource.url }}"
+                                   target="_blank"
+                                   class="btn btn-primary"
+                                   onclick="return checkLink(this)">
+                                    <i class="bi bi-box-arrow-up-right"></i> 访问资源
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-center"><i class="bi bi-shield-lock"></i> 隐私保护承诺</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><i class="bi bi-check-circle"></i> 所有交流内容端到端加密</li>
+                    <li class="list-group-item"><i class="bi bi-check-circle"></i> 严格匿名处理，不记录IP</li>
+                    <li class="list-group-item"><i class="bi bi-check-circle"></i> 永不泄露任何用户信息</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function checkLink(element) {
+    if (!element.href) {
+        alert('资源链接正在维护中');
+        return false;
+    }
+    return true;
+}
+</script>
+{% endblock %}

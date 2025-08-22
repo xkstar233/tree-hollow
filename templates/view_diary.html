@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="bi bi-journal-bookmark"></i> 编辑日记</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('view_diary', diary_id=diary.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="mb-3">
+                            <label for="diaryTitle" class="form-label">标题</label>
+                            <input type="text" class="form-control" id="diaryTitle" name="title"
+                                   value="{{ diary.title }}" placeholder="请输入日记标题">
+                        </div>
+                        <div class="mb-3">
+                            <label for="diaryContent" class="form-label">内容</label>
+                            <textarea class="form-control" id="diaryContent" name="content"
+                                      rows="12" required>{{ diary.content }}</textarea>
+                        </div>
+
+                        {% if diary.get_sentiment() %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="bi bi-emoji-smile"></i> 情绪分析</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="progress mb-2" style="height: 20px;">
+                                    <div class="progress-bar bg-success"
+                                         style="width: {{ diary.get_sentiment().positive * 100 }}%"
+                                         data-bs-toggle="tooltip"
+                                         title="积极程度：{{ '%.1f'|format(diary.get_sentiment().positive * 100) }}%">
+                                        <span class="progress-text">积极</span>
+                                    </div>
+                                    <div class="progress-bar bg-danger"
+                                         style="width: {{ diary.get_sentiment().negative * 100 }}%"
+                                         data-bs-toggle="tooltip"
+                                         title="消极程度：{{ '%.1f'|format(diary.get_sentiment().negative * 100) }}%">
+                                        <span class="progress-text">消极</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> 保存
+                            </button>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <time class="js-time" datetime="{{ diary.updated_at|iso_utc }}" data-style="date">
+                    {{ diary.updated_at|sh_time('%m-%d') }}
+                </time>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                确定要删除这篇日记吗？此操作不可恢复。
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form method="POST" action="{{ url_for('delete_diary', diary_id=diary.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// 启用工具提示
+$(function () {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

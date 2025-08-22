@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- 帖子卡片 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- 帖子元信息 -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">
+                    <time class="js-time" datetime="{{ post.created_at|iso_utc }}" data-style="datetime">
+                        {{ post.created_at|sh_time('%Y-%m-%d %H:%M') }}
+                    </time>
+                </span>
+
+
+                <span class="badge bg-secondary">
+                    匿名用户
+                </span>
+                <!-- 管理员删除按钮 -->
+                {% if current_user.is_admin %}
+                <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" class="delete-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i> 删除帖子
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            <!-- 帖子内容 -->
+            <div class="post-content mb-4">
+                {{ post.content }}
+            </div>
+
+            <!-- 情绪进度条 -->
+            {% if post.get_sentiment() %}
+  <div style="margin-top: 16px;">
+    <h4>情绪分析：</h4>
+
+    {% for label, score in post.get_sentiment().items() %}
+      {% set bar_color = "#9e9e9e" %}
+      {% set emoji = "🤔" %}
+      {% if label == "positive" %}
+        {% set bar_color = "#4caf50" %}
+        {% set emoji = "😄" %}
+      {% elif label == "negative" %}
+        {% set bar_color = "#f44336" %}
+        {% set emoji = "😞" %}
+      {% endif %}
+
+      <div style="margin-bottom: 10px;">
+        <span>{{ emoji }} {{ label|capitalize }}：</span>
+        <div style="background-color: #eee; height: 18px; width: 100%; border-radius: 4px; overflow: hidden;">
+          <div style="
+              height: 100%;
+              width: {{ (score * 100) | round(1) }}%;
+              background-color: {{ bar_color }};
+              color: white;
+              text-align: center;
+              font-size: 14px;
+          ">
+            {{ (score * 100) | round(1) }}%
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+
+
+
+        </div>
+    </div>
+
+    <!-- 评论区 -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="bi bi-chat-left-text"></i>
+                回应 ({{ comments|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            {% for comment in comments %}
+            <div class="comment-container mb-3" id="comment-{{ comment.id }}">
+                <!-- 主评论 -->
+                <div class="card">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">
+                                <time class="js-time" datetime="{{ post.created_at|iso_utc }}" data-style="datetime">
+                                    {{ post.created_at|sh_time('%Y-%m-%d %H:%M') }}
+                                </time>
+                            </span>
+
+
+                            <span class="badge bg-light text-dark">
+                                匿名用户 {{ loop.index }}
+                            </span>
+                            <!-- 管理员删除评论按钮 -->
+                            {% if current_user.is_admin %}
+                            <form method="POST" action="{{ url_for('delete_comment', comment_id=comment.id) }}" class="delete-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        <p class="mt-2 mb-2">{{ comment.content }}</p>
+
+                        <!-- 回复按钮 -->
+                        <button class="btn btn-sm btn-outline-primary reply-btn"
+                                data-comment-id="{{ comment.id }}">
+                            <i class="bi bi-reply"></i> 回复
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 回复表单 (默认隐藏) -->
+                <div class="reply-form mt-2 ms-4" style="display:none;">
+                    <form method="POST"
+                          action="{{ url_for('reply_comment', post_id=post.id, parent_id=comment.id) }}"
+                          class="reply-submit-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="input-group mb-3">
+                            <textarea class="form-control reply-content" name="content" rows="2" required
+                                      placeholder="写下你的回复..."
+                                      oninput="debounceCheckReply(this)"></textarea>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+
+                        <!-- 回复的敏感词检测反馈 -->
+                        <div class="reply-feedback mt-2" style="display: none;">
+                            <div class="alert alert-danger reply-sensitive-alert" style="display: none;">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <span class="reply-sensitive-message"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 显示回复 -->
+                {% if comment.replies %}
+                <div class="replies mt-2 ms-4 ps-3 border-start">
+                    {% for reply in comment.replies %}
+                    <div class="reply mb-2">
+                        <div class="card">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">
+                                        <time class="js-time" datetime="{{ post.created_at|iso_utc }}" data-style="datetime">
+                                            {{ post.created_at|sh_time('%Y-%m-%d %H:%M') }}
+                                        </time>
+                                    </span>
+
+
+                                    <span class="badge bg-light text-dark">
+                                        匿名用户 R{{ loop.index }}
+                                    </span>
+                                </div>
+                                <p class="mt-1 mb-0">{{ reply.content }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- 新评论表单 -->
+            <div class="mt-4">
+                <h6><i class="bi bi-pencil"></i> 添加新评论</h6>
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}" id="commentForm">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="mb-3">
+                                <textarea class="form-control" name="content" rows="3"
+                                        placeholder="写下你的回应..." required
+                                        oninput="debounceCheckComment()"></textarea>
+
+                                <!-- 评论敏感词检测反馈 -->
+                                <div id="commentFeedback" class="mt-2" style="display: none;">
+                                    <div class="alert alert-danger" id="commentSensitiveAlert" style="display: none;">
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                        <span id="commentSensitiveMessage"></span>
+                                    </div>
+                                    <div class="alert alert-info" id="commentCheckingAlert" style="display: none;">
+                                        <i class="bi bi-hourglass-split"></i> 正在检查评论内容...
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="commentSubmitBtn">
+                                <i class="bi bi-send"></i> 提交
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+console.log("绑定删除按钮")
+//删除确认对话框
+document.addEventListener('submit', function(e) {
+    if (e.target.classList.contains('delete-form')) {
+        const confirmed = confirm('确定要删除吗？此操作不可撤销！');
+        if (!confirmed) {
+            e.preventDefault();
+            console.log("用户取消删除");
+        } else {
+            console.log("用户确认删除");
+        }
+    }
+});
+
+// 启用Bootstrap工具提示
+$(function () {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+
+// 回复按钮功能
+document.querySelectorAll('.reply-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const commentId = this.dataset.commentId;
+        const form = this.closest('.comment-container').querySelector('.reply-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+
+        // 自动聚焦到文本框
+        if (form.style.display === 'block') {
+            form.querySelector('textarea').focus();
+        }
+    });
+});
+
+// 评论内容检测
+let commentDebounceTimer = null;
+
+function debounceCheckComment() {
+    clearTimeout(commentDebounceTimer);
+    commentDebounceTimer = setTimeout(() => {
+        checkCommentContent();
+    }, 800);
+}
+
+async function checkCommentContent() {
+    const content = $('#commentForm textarea').val().trim();
+    if (!content) {
+        $('#commentFeedback').hide();
+        return;
+    }
+
+    $('#commentCheckingAlert').show();
+    $('#commentSensitiveAlert').hide();
+    $('#commentFeedback').show();
+
+    try {
+        const response = await fetch('/api/content/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ content: content })
+        });
+
+        const result = await response.json();
+
+        if (result.is_sensitive) {
+            $('#commentSensitiveMessage').text(result.message);
+            if (result.details) {
+                const details = Object.entries(result.details).map(
+                    ([cat, words]) => `${cat}: ${words.slice(0,3).join(',')}${words.length>3?'...':''}`
+                ).join('; ');
+                $('#commentSensitiveMessage').text($('#commentSensitiveMessage').text() + ` (${details})`);
+            }
+            $('#commentCheckingAlert').hide();
+            $('#commentSensitiveAlert').show();
+        } else {
+            $('#commentFeedback').hide();
+        }
+    } catch (error) {
+        console.error('评论检测失败:', error);
+        $('#commentSensitiveMessage').text('内容安全检查暂时不可用');
+        $('#commentCheckingAlert').hide();
+        $('#commentSensitiveAlert').show();
+    }
+}
+
+// 回复内容检测
+function debounceCheckReply(textarea) {
+    const form = $(textarea).closest('.reply-submit-form');
+    clearTimeout(form.data('debounce'));
+    form.data('debounce', setTimeout(() => {
+        checkReplyContent(form);
+    }, 800));
+}
+
+async function checkReplyContent(form) {
+    const content = form.find('.reply-content').val().trim();
+    const feedback = form.find('.reply-feedback');
+
+    if (!content) {
+        feedback.hide();
+        return;
+    }
+
+    feedback.find('.reply-sensitive-alert').hide();
+    feedback.show();
+
+    try {
+        const response = await fetch('/api/content/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ content: content })
+        });
+
+        const result = await response.json();
+
+        if (result.is_sensitive) {
+            let message = result.message || '检测到敏感内容';
+            if (result.details) {
+                const details = Object.entries(result.details).map(
+                    ([cat, words]) => `${cat}: ${words.slice(0,2).join(',')}${words.length>2?'...':''}`
+                ).join('; ');
+                message += ` (${details})`;
+            }
+            form.find('.reply-sensitive-message').text(message);
+            feedback.find('.reply-sensitive-alert').show();
+        } else {
+            feedback.hide();
+        }
+    } catch (error) {
+        console.error('回复检测失败:', error);
+        form.find('.reply-sensitive-message').text('内容安全检查暂时不可用');
+        feedback.find('.reply-sensitive-alert').show();
+    }
+}
+
+// 阻止包含敏感内容的提交
+$('#commentForm').on('submit', function(e) {
+    if ($('#commentSensitiveAlert').is(':visible')) {
+        e.preventDefault();
+        $('#commentSensitiveAlert').addClass('animate__animated animate__headShake');
+        setTimeout(() => {
+            $('#commentSensitiveAlert').removeClass('animate__animated animate__headShake');
+        }, 1000);
+    }
+});
+
+$('.reply-submit-form').on('submit', function(e) {
+    if ($(this).find('.reply-sensitive-alert').is(':visible')) {
+        e.preventDefault();
+        $(this).find('.reply-sensitive-alert').addClass('animate__animated animate__headShake');
+        setTimeout(() => {
+            $(this).find('.reply-sensitive-alert').removeClass('animate__animated animate__headShake');
+        }, 1000);
+    }
+});
+
+// 暗黑模式适配
+if (document.body.classList.contains('dark-mode')) {
+    document.querySelectorAll('.card').forEach(card => {
+        card.classList.add('bg-dark');
+        card.classList.add('text-light');
+    });
+}
+</script>
+
+<style>
+.comment-container {
+    position: relative;
+}
+.replies {
+    border-left: 3px solid #dee2e6;
+}
+.dark-mode .replies {
+    border-left-color: #495057;
+}
+.reply-form textarea {
+    resize: none;
+}
+
+/* 动画效果 */
+.animate__animated {
+    animation-duration: 1s;
+}
+.animate__headShake {
+    animation-name: headShake;
+}
+@keyframes headShake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+}
+
+/* 暗黑模式适配 */
+.dark-mode #commentSensitiveAlert,
+.dark-mode .reply-sensitive-alert {
+    background-color: #4a1c1c;
+    border-color: #842029;
+}
+.dark-mode #commentCheckingAlert {
+    background-color: #1c2b4a;
+    border-color: #084298;
+}
+.dark-mode .reply-feedback {
+    color: #f8f9fa;
+}
+</style>
+{% endblock %}

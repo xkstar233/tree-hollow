@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  /* 仅在首页聚合页隐藏 3D 星空层 */
+  #galaxy-container { display: none !important; }
+</style>
+
+<div class="row g-4">
+  <!-- 左侧：帖子列表 -->
+  <div class="col-lg-8">
+    <h3 class="mb-3">最近的倾诉</h3>
+
+    {% if posts.items %}
+      {% for post in posts.items %}
+      {% set s = post.get_sentiment() %}
+      {% set pos = (s.positive * 100) | round(1) %}
+      {% set neg = (s.negative * 100) | round(1) %}
+      <div class="card mb-3 hover-raise">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0 text-truncate" style="max-width:70%">
+              {{ post.content[:26] ~ ('…' if post.content|length > 26) }}
+            </h5>
+            <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+          </div>
+
+          <p class="text-muted mb-3">{{ post.user_anonymous_name or '匿名用户' }}</p>
+
+          <!-- 情绪条 -->
+          <div class="progress mb-3 sentiment-indicator" style="position:relative;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ pos }}%;"></div>
+            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ neg }}%;"></div>
+            <span class="progress-text">
+              正向 {{ pos }}% / 负向 {{ neg }}%
+            </span>
+          </div>
+
+          <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-primary" href="{{ url_for('view_post', post_id=post.id) }}">
+              查看详情
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('new_post') }}">
+              我也想倾诉
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- 分页 -->
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          {% if posts.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('home', page=posts.prev_num) }}">上一页</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">上一页</span></li>
+          {% endif %}
+
+          <li class="page-item disabled"><span class="page-link">第 {{ posts.page }}/{{ posts.pages }} 页</span></li>
+
+          {% if posts.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('home', page=posts.next_num) }}">下一页</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">下一页</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% else %}
+      <div class="alert alert-info">暂时还没有帖子，来发表第一条吧～</div>
+    {% endif %}
+  </div>
+
+  <!-- 右侧：帮助区 + 每日暖心语 -->
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title mb-3">需要帮助？</h5>
+        <div class="d-grid gap-2">
+          <a class="btn btn-primary pressable" href="{{ url_for('resources') }}">支持资源</a>
+          <a class="btn btn-outline-danger pressable" href="{{ url_for('emergency') }}">紧急帮助</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title mb-3">每日暖心语</h5>
+        <div id="warm-text" class="mb-3">{{ warm_first }}</div>
+
+        <button
+          id="warm-refresh"
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          data-url="{{ url_for('get_random_warm_message') }}">
+          换一句
+        </button>
+      </div>
+    </div>
+  </div>
+</div> <!-- ← 关闭 .row.g-4 -->
+
+<script>
+  (function initWarm() {
+    const btn  = document.getElementById('warm-refresh');
+    const text = document.getElementById('warm-text');
+    if (!btn || !text) return;
+
+    const apiBase = btn.getAttribute('data-url') || '/api/warm_messages/random';
+    console.log('[warm] apiBase =', apiBase);
+
+    async function fetchWarmOnce(currentText) {
+      // 把当前文案作为 avoid 传给后端（即便后端不处理，也不影响）
+      const url = apiBase
+        + (apiBase.includes('?') ? '&' : '?')
+        + 'ts=' + Date.now()
+        + '&avoid=' + encodeURIComponent((currentText || '').trim());
+
+      const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
+      console.log('[warm] http', res.status, res.statusText);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json().catch(() => ({}));
+      const msg  = (data && (data.message || data.text) || '').trim();
+      console.log('[warm] message =', msg);
+      return msg;
+    }
+
+    async function getDifferentWarm(currentText) {
+      // 最多重试 5 次，尽量拿到与当前不同的句子
+      for (let i = 0; i < 5; i++) {
+        const msg = await fetchWarmOnce(currentText);
+        if (msg && msg !== (currentText || '').trim()) return msg;
+      }
+      return null; // 实在没拿到不同的，就返回 null
+    }
+
+    // 轻微淡入淡出
+    function fadeSwap(el, nextText) {
+      el.style.transition = 'opacity .18s ease';
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.textContent = nextText;
+        el.style.opacity = '1';
+      }, 180);
+    }
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      console.log('[warm] click');
+
+      const oldBtn = btn.textContent;
+      const oldTxt = text.textContent;
+
+      btn.disabled = true;
+      btn.textContent = '…';
+
+      try {
+        const next = await getDifferentWarm(oldTxt);
+        if (next) {
+          fadeSwap(text, next);
+        } else {
+          // 兜底：即便一样也显示出来，避免“没反应”的错觉
+          const fallback = await fetchWarmOnce('');
+          fadeSwap(text, fallback || '愿你被温柔以待。');
+        }
+      } catch (err) {
+        console.error('[warm] error:', err);
+        text.textContent = '网络小差，稍后再试～';
+      } finally {
+        btn.textContent = oldBtn;
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+
+
+
+{% endblock %}

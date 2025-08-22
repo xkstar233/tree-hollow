@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-3">管理员面板</h1>
+
+  <!-- 顶部 Tab -->
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab">概览</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-zk" type="button" role="tab">ZK 控制面板</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-audit" type="button" role="tab">审计中心</button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <!-- Tab 1：概览（原内容保持） -->
+    <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+      <!-- 快捷操作 -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <a href="{{ url_for('manage_warm_messages') }}" class="btn btn-primary w-100">管理暖心语</a>
+        </div>
+        <div class="col-md-4">
+          <a href="{{ url_for('admin_view_posts') }}" class="btn btn-warning w-100">管理帖子</a>
+        </div>
+      </div>
+
+      <!-- 最近帖子（沿用现有表格） -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">最近帖子</h5>
+            <a class="small text-decoration-none" href="{{ url_for('admin_view_posts') }}">查看全部</a>
+          </div>
+          {% if recent_posts and recent_posts|length > 0 %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">ID</th>
+                  <th>内容摘要</th>
+                  <th style="width: 180px;">时间</th>
+                  <th style="width: 120px;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for post in recent_posts %}
+                <tr>
+                  <td class="font-monospace">{{ post.id[:6] }}…</td>
+                  <td>{{ post.content[:30] }}{% if post.content|length > 30 %}…{% endif %}</td>
+                  <td class="text-muted">{{ post.created_at|sh_time('%Y-%m-%d %H:%M') }}</td>
+                  <td>
+                    <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" class="delete-form d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                      <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                    </form>
+                    <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary">查看</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            <div class="alert alert-info mb-0">暂无帖子。</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 最近上链记录（缩略） -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">最近上链记录</h5>
+            <a class="small text-decoration-none" href="{{ url_for('admin_recent_onchain') }}">查看全部</a>
+          </div>
+          {% if recent_onchain and recent_onchain|length > 0 %}
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 180px;">时间</th>
+                  <th style="width: 160px;">动作</th>
+                  <th>TxId</th>
+                  <th style="width: 120px;" class="text-end">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for it in recent_onchain %}
+                <tr>
+                  <td class="text-muted">{{ it.ts or '—' }}</td>
+                  <td><span class="badge bg-secondary">{{ it.action }}</span></td>
+                  <td class="font-monospace">
+                    <a href="{{ url_for('admin_audit_tx', txid=it.txId) }}" class="text-decoration-none">{{ it.txId[:12] }}…{{ it.txId[-6:] }}</a>
+                  </td>
+                  <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyTx('{{ it.txId }}')">复制TxId</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+            <div class="alert alert-info mb-0">暂无上链记录。</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2：ZK 控制面板（复用 /admin/zk_panel 的表格与按钮） -->
+    <div class="tab-pane fade" id="tab-zk" role="tabpanel">
+      <div class="card mb-3">
+        <div class="card-body">
+          <label class="form-label">管理员凭证（仅本页会话使用，不保存）</label>
+          <input id="sk" type="password" class="form-control" placeholder="粘贴你的凭证（例如 8872...）">
+          <div class="form-text">本页为简化演示。</div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center mb-2">
+        <h5 class="me-3 mb-0">最近帖子（按时间倒序，最多 50 条）</h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">刷新</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead>
+            <tr>
+              <th style="width: 18%">Post ID</th>
+              <th style="width: 12%">创建时间</th>
+              <th>内容（节选）</th>
+              <th style="width: 12%">操作</th>
+            </tr>
+          </thead>
+          <tbody id="post-tbody">
+          {% for p in zk_posts %}
+            <tr id="row-{{p.id}}">
+              <td class="font-monospace">{{ p.id }}</td>
+              <td class="font-monospace">{{ p.created_at|sh_time('%Y-%m-%d %H:%M') }}</td>
+              <td style="word-break:break-all;max-width:520px">{{ (p.content or '')[:160] }}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="zkDelete('{{p.id}}', this)">ZK 删除</button></td>
+            </tr>
+          {% endfor %}
+          {% if not zk_posts %}
+            <tr><td colspan="4" class="text-muted">暂无帖子</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 3：审计中心（把 /admin/audit 的表格与趋势图嵌进来） -->
+    <div class="tab-pane fade" id="tab-audit" role="tabpanel">
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white">管理员操作日志（近 {{ audit_hours }} 小时）</div>
+            <div class="card-body" style="max-height:420px;overflow:auto;">
+              <table class="table table-sm">
+                <thead><tr><th>时间</th><th>详情</th></tr></thead>
+                <tbody>
+                  {% for it in admin_items|reverse %}
+                    <tr><td><small>{{ it.time }}</small></td><td><small>{{ it.msg }}</small></td></tr>
+                  {% else %}<tr><td colspan="2">窗口内无管理员日志</td></tr>{% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card mb-3">
+            <div class="card-header bg-info text-white">安全事件日志（近 {{ audit_hours }} 小时）</div>
+            <div class="card-body" style="max-height:420px;overflow:auto;">
+              <table class="table table-sm">
+                <thead><tr><th>时间</th><th>事件</th><th>数据</th></tr></thead>
+                <tbody>
+                  {% for it in sec_items|reverse %}
+                    <tr>
+                      <td><small>{{ it.time }}</small></td>
+                      <td><small><code>{{ it.event }}</code></small></td>
+                      <td><small style="white-space:pre-wrap;">{{ it.data }}</small></td>
+                    </tr>
+                  {% else %}<tr><td colspan="3">窗口内无安全事件</td></tr>{% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-secondary text-white d-flex align-items-center justify-content-between">
+              <span>近 {{ audit_hours }} 小时安全事件趋势</span>
+              <form method="get" class="d-flex gap-2 align-items-center">
+                <input type="number" min="1" max="168" name="hours" value="{{ audit_hours }}" class="form-control form-control-sm" style="width:90px;">
+                <button class="btn btn-sm btn-light text-dark" type="submit">应用</button>
+              </form>
+            </div>
+            <div class="card-body"><canvas id="secChart" height="116"></canvas></div>
+          </div>
+
+          <!-- TxId 快速查询入口（跳转到原来的详情页） -->
+          <div class="mt-3">
+            <form class="row g-2" action="{{ url_for('admin_audit_tx', txid='dummy') }}" onsubmit="event.preventDefault(); const x=document.getElementById('txid_inp').value.trim(); if(x){ window.location = '{{ url_for('admin_audit_tx', txid='') }}'+x; }">
+              <div class="col-auto"><input id="txid_inp" class="form-control" placeholder="输入 TxId 查询"/></div>
+              <div class="col-auto"><button class="btn btn-outline-primary" type="submit">查看链上日志</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tab-content -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// 删除确认（概览区）
+document.querySelectorAll('.delete-form').forEach(form => {
+  form.addEventListener('submit', function(e){
+    if(!confirm('确定要删除吗？此操作不可撤销！')) e.preventDefault();
+  });
+});
+// 复制 TxId（概览区）
+async function copyTx(tx){
+  try { await navigator.clipboard.writeText(tx); alert('已复制：' + tx.slice(0,12) + '…'); }
+  catch(e){ console.error(e); alert('复制失败，请手动选择文本复制。'); }
+}
+
+// ZK 删除（ZK 面板区）
+async function zkDelete(postId, btn){
+  const sk = (document.getElementById('sk').value || '').trim();
+  if(!sk){ alert('请先输入管理员凭证'); return; }
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '处理中…';
+  try{
+    const r = await fetch('/api/admin/zk_delete_post', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ sk_hex: sk, post_id: postId })
+    });
+    const data = await r.json();
+    if(r.ok && data.ok){
+      alert('已删除：' + postId);
+      const tr = document.getElementById('row-' + postId); if(tr) tr.remove();
+    }else{
+      alert((data.reason || '删除失败') + '（' + r.status + '）');
+    }
+  }catch(e){ alert('请求异常：' + e); }
+  finally{ btn.disabled = false; btn.textContent = old; }
+}
+
+// 审计折线图（审计中心）
+(function(){
+  const labels = {{ audit_labels|tojson }};
+  const datasets = {{ audit_datasets|tojson }};
+  const ctx = document.getElementById('secChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: datasets.map(ds => ({
+        label: ds.label, data: ds.data, borderColor: ds.borderColor,
+        fill: false, pointRadius: 2, tension: 0.2
+      }))
+    },
+    options: {
+      responsive: true, plugins: { legend: { position: 'top' } },
+      scales: { x: { title: { display: true, text: '小时' } },
+                y: { title: { display: true, text: '事件数' }, beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

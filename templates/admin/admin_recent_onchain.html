@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-3">最近上链记录（{{ items|length }} 条）</h3>
+
+  {% if items and items|length > 0 %}
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th style="width: 180px;">时间</th>
+          <th style="width: 160px;">动作</th>
+          <th>TxId</th>
+          <th style="width: 120px;" class="text-end">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td class="text-muted">{{ it.ts or '—' }}</td>
+          <td><span class="badge bg-secondary">{{ it.action }}</span></td>
+          <td class="font-monospace">
+            <a href="{{ url_for('admin_audit_tx', txid=it.txId) }}" class="text-decoration-none">
+              {{ it.txId }}
+            </a>
+          </td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="copyTx('{{ it.txId }}')">复制TxId</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="alert alert-info">暂无上链记录。</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+async function copyTx(tx){
+  try {
+    await navigator.clipboard.writeText(tx);
+    alert('已复制：' + tx);
+  } catch(e){
+    console.error(e);
+    alert('复制失败，请手动选择文本复制。');
+  }
+}
+</script>
+{% endblock %}

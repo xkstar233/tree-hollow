@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>帖子管理</h1>
+    <table class="table admin-posts-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>内容摘要</th>
+                <th>时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts.items %}
+            <tr>
+                <td>{{ post.id[:6] }}...</td>
+                <td>{{ post.content[:30] }}{% if post.content|length > 30 %}...{% endif %}</td>
+                <td>
+                     <time class="js-time" datetime="{{ post.created_at|iso_utc }}" data-style="datetime">
+                        {{ post.created_at|sh_time('%Y-%m-%d %H:%M') }}
+                     </time>
+                        </td>
+
+                <td>
+                    <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" class="delete-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 分页 -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if posts.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin_view_posts', page=posts.prev_num) }}">上一页</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">第 {{ posts.page }} 页</span>
+            </li>
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin_view_posts', page=posts.next_num) }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('submit', function(e) {
+    if (e.target.classList.contains('delete-form')) {
+        const confirmed = confirm('确定要删除吗？此操作不可撤销！');
+        if (!confirmed) {
+            e.preventDefault();
+        }
+    }
+});
+</script>
+{% endblock %}

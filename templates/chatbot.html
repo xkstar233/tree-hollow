@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}心理支持助手{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h4><i class="bi bi-robot"></i> 心理支持助手</h4>
+        </div>
+        <div class="card-body">
+          <div id="chat-container" style="height: 400px; overflow-y: auto; margin-bottom: 20px;">
+            <!-- 聊天记录将在这里动态加载 -->
+            <div class="text-center text-muted mt-5" id="welcome-message">
+              <h5>你好，我是你的心理支持助手</h5>
+              <p>可以随时向我倾诉你的感受</p>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <textarea id="user-input" class="form-control" placeholder="写下你想说的话..." rows="2"></textarea>
+            <button id="send-btn" class="btn btn-primary">
+              <i class="bi bi-send"></i> 发送
+            </button>
+          </div>
+
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle"></i> 请注意：AI助手不能替代专业心理咨询
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // 依赖 base.html 中已加载的 jQuery/Bootstrap，不要在此重复引入
+    $(document).ready(function () {
+      const chatContainer = $('#chat-container');
+      const userInput = $('#user-input');
+      const chatHistory = []; // 存储对话历史
+
+      function addMessage(role, content) {
+        const messageClass = role === 'user' ? 'text-end' : 'text-start';
+        const icon = role === 'user' ? 'bi-person' : 'bi-robot';
+
+        chatContainer.append(`
+          <div class="mb-3 ${messageClass}">
+            <div class="d-flex ${role === 'user' ? 'justify-content-end' : 'justify-content-start'}">
+              <div class="card ${role === 'user' ? 'bg-light' : 'bg-info text-white'}" style="max-width: 80%">
+                <div class="card-body p-2">
+                  <i class="bi ${icon}"></i> ${content.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `);
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+      }
+
+      let typingIndicatorId = 0;
+      function showTypingIndicator() {
+        const indicator = $('<div class="text-muted">助手正在思考...</div>');
+        chatContainer.append(indicator);
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        return typingIndicatorId++;
+      }
+
+      function removeTypingIndicator(id) {
+        $('.text-muted:contains("助手正在思考...")').remove();
+      }
+
+      async function sendMessage() {
+        const userInputVal = $('#user-input').val().trim();
+        if (!userInputVal) return;
+
+        addMessage('user', userInputVal);
+        $('#user-input').val('');
+
+        const typingId = showTypingIndicator();
+
+        try {
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: userInputVal,
+              history: chatHistory
+            })
+          });
+
+          const data = await response.json();
+          removeTypingIndicator(typingId);
+
+          if (data.error) {
+            addMessage('assistant', `错误: ${data.error}`);
+          } else {
+            addMessage('assistant', data.response);
+            chatHistory.push(userInputVal, data.response);
+          }
+        } catch (error) {
+          removeTypingIndicator(typingId);
+          addMessage('assistant', '网络错误，请检查连接');
+        }
+      }
+
+      $('#send-btn').click(function () {
+        sendMessage();
+      });
+
+      // 支持按 Enter 发送（Shift+Enter 换行）
+      userInput.on('keypress', function (e) {
+        if (e.which === 13 && !e.shiftKey) {
+          e.preventDefault();
+          $('#send-btn').click();
+        }
+      });
+    });
+  </script>
+{% endblock %}

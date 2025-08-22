@@ -1,0 +1,179 @@
+/* static/css/galaxy.css */
+#galaxy-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(to bottom, #000000 0%, #0a0a2a 100%);
+}
+
+.galaxy-container {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    color: #e0e0e0;
+}
+
+.galaxy-control-panel {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 280px;
+    z-index: 100;
+    background-color: rgba(10, 10, 30, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 0, 50, 0.5);
+    padding: 15px;
+}
+
+.galaxy-panel-card {
+    background-color: rgba(20, 20, 50, 0.6) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    border-radius: 12px;
+    color: #e0e0e0;
+    margin-bottom: 15px;
+}
+
+.galaxy-text {
+    color: #b8d8ff;
+    text-shadow: 0 0 8px rgba(110, 184, 255, 0.5);
+    font-family: 'Orbitron', sans-serif;
+}
+
+.galaxy-message {
+    font-style: italic;
+    color: #e0e0e0;
+    margin: 15px 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+.galaxy-color-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.positive-dot {
+    color: #4CAF50;
+    background-color: #4CAF50;
+}
+
+.neutral-dot {
+    color: #FFC107;
+    background-color: #FFC107;
+}
+
+.negative-dot {
+    color: #F44336;
+    background-color: #F44336;
+}
+
+.galaxy-features {
+    list-style-type: none;
+    padding-left: 5px;
+}
+
+.galaxy-features li {
+    margin-bottom: 5px;
+    position: relative;
+    padding-left: 20px;
+}
+
+.galaxy-features li:before {
+    content: "•";
+    color: #6eb8ff;
+    position: absolute;
+    left: 0;
+}
+
+.galaxy-bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    background-color: rgba(20, 20, 50, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 25px;
+    padding: 10px 20px;
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 0, 50, 0.3);
+    z-index: 100;
+}
+
+.galaxy-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 15px;
+    color: #b8d8ff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.galaxy-nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.galaxy-nav-item span {
+    font-size: 0.8rem;
+}
+
+.galaxy-nav-item:hover {
+    color: #6eb8ff;
+    transform: translateY(-3px);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .galaxy-control-panel {
+        width: 220px;
+        right: 10px;
+        top: 70px;
+        padding: 10px;
+    }
+
+    .galaxy-bottom-nav {
+        padding: 8px 15px;
+    }
+
+    .galaxy-nav-item {
+        padding: 0 10px;
+    }
+
+    .galaxy-nav-item i {
+        font-size: 1.2rem;
+    }
+
+    .galaxy-nav-item span {
+        font-size: 0.7rem;
+    }
+}
+
+
+#galaxy-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(to bottom, #000000 0%, #0a0a2a 100%);
+}
+
+/* 确保内容不会被 3D 场景遮挡 */
+.container {
+    position: relative;
+    z-index: 1;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明背景增加可读性 */
+    padding-top: 20px;
+}

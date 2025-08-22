@@ -1,0 +1,8 @@
+flask==2.3.2
+flask-sqlalchemy==3.0.3
+flask-login==0.6.3
+python-dotenv==1.0.0
+cryptography==41.0.3
+transformers==4.51.3
+torch==2.3.0
+numpy==1.26.4

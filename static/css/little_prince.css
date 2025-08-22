@@ -1,0 +1,89 @@
+/* 小王子家样式 */
+.prince-home {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    text-align: center;
+}
+
+.home-planet {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 10px;
+    position: relative;
+}
+
+.home-elements {
+    display: flex;
+    background-color: rgba(20, 20, 50, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 25px;
+    padding: 10px 20px;
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 0, 50, 0.3);
+}
+
+.home-element {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #b8d8ff;
+}
+
+.home-element:hover {
+    transform: translateY(-5px);
+    color: #6eb8ff;
+}
+
+.element-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+.element-label {
+    font-size: 0.8rem;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* 小王子模型容器 */
+#prince-container {
+    position: fixed;
+    bottom: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 150px;
+    z-index: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .home-elements {
+        padding: 8px 15px;
+    }
+
+    .home-element {
+        padding: 0 10px;
+    }
+
+    .element-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .element-label {
+        font-size: 0.7rem;
+    }
+
+    #prince-container {
+        bottom: 180px;
+        width: 80px;
+        height: 120px;
+    }
+}
