@@ -16,7 +16,7 @@ def create_admin():
             email='',
             is_admin=True  # 确保User模型有is_admin字段
         )
-        admin.set_password('yy12345678')  # 确保有set_password方法
+        admin.set_password('yy123')  # 确保有set_password方法
 
         db.session.add(admin)
         db.session.commit()
