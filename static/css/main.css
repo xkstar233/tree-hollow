@@ -1,0 +1,433 @@
+/* 基础样式（浅色模式） */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  cursor: grab;
+}
+body:active { cursor: grabbing; }
+
+/* 白天模式背景修正与外层去灰 */
+body:not(.dark-mode) { background-color: #f8f9fa !important; }
+body:not(.dark-mode) .container,
+body:not(.dark-mode) .content-wrapper,
+body:not(.dark-mode) main { background-color: transparent !important; }
+/* 白天模式导航栏字体颜色优化 */
+body:not(.dark-mode) .navbar,
+body:not(.dark-mode) .navbar .nav-link,
+body:not(.dark-mode) .navbar .navbar-brand {
+    color: #ffffff !important; /* 纯白字体 */
+}
+
+/* 悬浮时稍微降低透明度，增加反馈感 */
+body:not(.dark-mode) .navbar .nav-link:hover {
+    color: rgba(255,255,255,0.85) !important;
+}
+
+.container { flex: 1; position: relative; z-index: 1; }
+
+/* 白天模式：用 Bootstrap 变量统一控制导航栏文字/状态色 */
+body:not(.dark-mode) .navbar {
+  /* 普通、悬浮、激活、品牌文字 */
+  --bs-navbar-color: rgba(255,255,255,.92);
+  --bs-navbar-hover-color: #ffffff;
+  --bs-navbar-active-color: #ffffff;
+  --bs-navbar-brand-color: #ffffff;
+  --bs-navbar-brand-hover-color: #ffffff;
+
+  /* 切换按钮细节（如果有用到） */
+  --bs-navbar-toggler-icon-bg: none;                 /* 保持默认图标 */
+  --bs-navbar-toggler-border-color: rgba(255,255,255,.25);
+}
+
+/* 保险起见，确保链接与品牌实际继承到变量色 */
+body:not(.dark-mode) .navbar .navbar-brand,
+body:not(.dark-mode) .navbar .nav-link {
+  color: var(--bs-navbar-color) !important;
+}
+body:not(.dark-mode) .navbar .nav-link:hover,
+body:not(.dark-mode) .navbar .nav-link:focus {
+  color: var(--bs-navbar-hover-color) !important;
+  text-shadow: 0 0 6px rgba(255,255,255,.25); /* 轻微高光，观感更清晰 */
+}
+body:not(.dark-mode) .navbar .nav-link.active,
+body:not(.dark-mode) .navbar .nav-link.show {
+  color: var(--bs-navbar-active-color) !important;
+}
+
+/* “暗黑模式”开关的文字也跟随变亮 */
+body:not(.dark-mode) .form-check-label[for="darkModeToggle"] {
+  color: #ffffff !important;
+}
+
+
+/* ===================== 暗黑模式（柔和炭灰蓝） ===================== */
+html.dark-mode, body.dark-mode {
+  background-color: #1c1e26 !important;
+  color: #e6e6e6;
+}
+
+/* 去掉暗色下容器的额外底色 */
+.dark-mode .container,
+.dark-mode .content-wrapper,
+.dark-mode main,
+.dark-mode .page,
+.dark-mode .page-section { background: transparent !important; }
+
+/* —— 导航与页脚（大面积表面蓝更暗） —— */
+.dark-mode .navbar {
+  background-color: #181b22 !important;
+  border-bottom-color: #232733 !important;
+}
+.dark-mode .navbar.bg-primary {            /* 顶部导航 */
+  background-color: #24345c !important;
+  border-color: #24345c !important;
+}
+.dark-mode footer.bg-primary,               /* 页脚条 */
+.dark-mode .footer.bg-primary {
+  background-color: #24345c !important;
+  border-color: #24345c !important;
+}
+
+/* —— 卡片与分隔 —— */
+.card {
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 50, 0.03);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease-in-out;
+}
+.dark-mode .card {
+  background-color: #242733 !important;
+  border-color: #3a3f4b !important;
+  color: #e6e6e6 !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+}
+.card-header { border-bottom: 1px solid rgba(0,0,0,0.06); }
+.dark-mode .card-header { background: transparent !important; border-bottom-color: #3a3f4b !important; }
+.dark-mode hr, .dark-mode .list-group-item { border-color: #3a3f4b !important; }
+.dark-mode .list-group-item { background-color: #242733 !important; color: #e6e6e6 !important; }
+
+/* —— 文字与次要信息 —— */
+.post-content { white-space: pre-line; font-size: 1.1rem; line-height: 1.8; }
+.post-meta { font-size: 0.9rem; color: #6c757d; }
+.dark-mode .text-muted { color: #a0a4ad !important; }
+
+/* —— 表单输入 —— */
+.form-control:focus { box-shadow: 0 0 0 0.25rem rgba(0,0,0,0.05); }
+.dark-mode .form-control,
+.dark-mode .input-group-text,
+.dark-mode textarea.form-control {
+  background-color: #2a2d36 !important;
+  border: 1px solid #3a3f4b !important;
+  color: #e6e6e6 !important;
+}
+.dark-mode .form-control::placeholder { color: #9aa0aa !important; opacity: 1; }
+.dark-mode .form-control:focus {
+  border-color: #3a7ae0 !important;
+  box-shadow: 0 0 0 .2rem rgba(58,122,224,.25) !important;
+}
+
+/* —— 主蓝色（小面积/交互） —— */
+.dark-mode .btn-primary {
+  background-color: #3a7ae0 !important;
+  border-color: #3a7ae0 !important;
+  color: #ffffff !important;
+}
+.dark-mode .btn-primary:hover { background-color: #2f63d3 !important; border-color: #2f63d3 !important; }
+.dark-mode .btn-primary:active,
+.dark-mode .btn-primary:focus { background-color: #274ea8 !important; border-color: #274ea8 !important; }
+
+.dark-mode a,
+.dark-mode .link-primary,
+.dark-mode .text-primary { color: #3a7ae0 !important; }
+.dark-mode a:hover,
+.dark-mode .link-primary:hover { color: #2f63d3 !important; }
+
+/* 保留描边按钮风格 */
+.dark-mode .btn-outline-secondary { color: #cfd3da !important; border-color: #5a6270 !important; }
+.dark-mode .btn-outline-secondary:hover { background: #cfd3da !important; color: #1c1e26 !important; }
+
+/* —— 不同语义状态（柔和版） —— */
+.dark-mode .alert-warning,
+.dark-mode .bg-warning,
+.dark-mode .bg-warning-subtle {
+  background-color: #3a3208 !important;
+  color: #ffe08a !important;
+  border-color: #7a5f00 !important;
+}
+.dark-mode .alert-info,
+.dark-mode .bg-info,
+.dark-mode .bg-info-subtle {
+  background-color: #0f2b3a !important;
+  color: #cfe8ff !important;
+  border-color: #2f6c99 !important;
+}
+
+/* ====== 导航字体（沿用） ====== */
+.navbar-brand {
+  font-size: 2rem !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: 'Orbitron', sans-serif;
+  color: inherit !important;
+}
+.nav-link {
+  font-size: 1.3rem !important;
+  font-weight: 500;
+  padding: 0.7rem 1.2rem;
+  color: inherit !important;
+  transition: all 0.3s ease;
+}
+.nav-link:hover { transform: translateY(-2px); opacity: 0.9; }
+nav .nav-link, .navbar-nav .nav-link { font-size: 1.8rem !important; font-weight: 600 !important; letter-spacing: 1px; }
+
+/* ====== 其他保留的 UI ====== */
+.post-card { border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s; }
+.post-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+.sentiment-indicator .progress { border-radius: 4px; overflow: hidden; }
+.progress-text { position: absolute; width: 100%; text-align: center; color: #fff; font-size: 0.7rem; text-shadow: 0 0 2px rgba(0,0,0,0.5); }
+
+@keyframes fadeIn { from {opacity:0; transform: translateY(20px);} to {opacity:1; transform: translateY(0);} }
+@keyframes float { 0% {transform: translateY(0);} 50% {transform: translateY(-10px);} 100% {transform: translateY(0);} }
+
+.emergency-card { border-left: 4px solid #dc3545; }
+.tooltip-inner { max-width: 300px; padding: 0.5rem 1rem; }
+
+.diary-content { font-size: 1.1rem; line-height: 1.8; white-space: pre-line; }
+.diary-date { font-size: 0.9rem; color: #6c757d; }
+.dark-mode .diary-content { color: #f8f9fa; }
+.dark-mode .diary-date { color: #adb5bd; }
+
+/* 星空/交互元素（结构保留，不设色） */
+#galaxy-container, #galaxy-canvas {
+  position: fixed !important; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0 !important; pointer-events: none !important; opacity: 0.7;
+}
+.galaxy-node { position: relative; cursor: pointer; transition: all 0.3s ease; }
+.galaxy-node:hover { transform: scale(1.1); }
+.node-glow { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease; }
+.galaxy-node:hover .node-glow { opacity: 1; }
+.node-label { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; opacity: 0; transition: opacity 0.3s ease; }
+.galaxy-node:hover .node-label { opacity: 1; }
+
+.galaxy-bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000;
+  background: transparent;
+}
+.galaxy-nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease; color: inherit; }
+.galaxy-nav-item:hover, .galaxy-nav-item.active { background: rgba(0,0,0,0.06); }
+.dark-mode .galaxy-nav-item:hover, .dark-mode .galaxy-nav-item.active { background: rgba(255,255,255,0.08); }
+.galaxy-nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
+.galaxy-nav-item span { font-size: 0.875rem; }
+
+/* 小王子主题（结构性样式） */
+.little-prince-mode {}
+.prince-card { border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; font-family: 'Indie Flower', cursive; }
+.diary-page { background-size: cover; padding: 2rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: 'Indie Flower', cursive; }
+
+/* 模态层级修复 */
+.modal { z-index: 1050 !important; pointer-events: auto !important; }
+#newDiaryModal { z-index: 1060 !important; pointer-events: auto !important; }
+footer { z-index: 1 !important; position: relative !important; }
+#newDiaryModal.show { pointer-events: auto !important; opacity: 1 !important; visibility: visible !important; }
+.modal-backdrop { display: none !important; }
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .post-content { font-size: 1rem; }
+  .card { backdrop-filter: none; }
+  .container.my-4 { padding-bottom: 80px; }
+  .galaxy-bottom-nav { padding: 10px 0; }
+  #prince-container { transform: scale(0.7) translateX(-50%); bottom: 150px; }
+  .prince-home { bottom: 10px; padding: 5px; }
+  .galaxy-container { perspective: 1000px; }
+}
+
+
+
+
+/* ================= 动效与悬浮效果 ================= */
+
+/* 统一的过渡基线 */
+:root {
+  --ease-standard: cubic-bezier(.2, .8, .2, 1);
+  --elev-1: 0 2px 8px rgba(0,0,0,.08);
+  --elev-2: 0 8px 24px rgba(0,0,0,.12);
+}
+.dark-mode :root {
+  --elev-1: 0 2px 10px rgba(0,0,0,.35);
+  --elev-2: 0 10px 28px rgba(0,0,0,.45);
+}
+
+/* 基础过渡：让大多数可交互元素在 hover 更顺滑 */
+.card,
+.btn,
+.nav-link,
+.list-group-item,
+.form-control {
+  transition:
+    transform .18s var(--ease-standard),
+    box-shadow .2s var(--ease-standard),
+    background-color .2s var(--ease-standard),
+    border-color .2s var(--ease-standard),
+    color .2s var(--ease-standard),
+    opacity .2s var(--ease-standard);
+}
+
+/* —— 卡片：抬升 + 轻微上浮 —— */
+.card {
+  box-shadow: var(--elev-1);
+  transform: translateZ(0); /* 防止模糊 */
+}
+.card:hover {
+  box-shadow: var(--elev-2);
+  transform: translateY(-2px);
+}
+.card:active {
+  transform: translateY(0); /* 点击时落下 */
+}
+
+/* —— 列表项：轻浮与描边强化 —— */
+.list-group-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.dark-mode .list-group-item:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+
+/* —— 导航链接：下划线“滑入” —— */
+.nav-link {
+  position: relative;
+  text-decoration: none !important;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .2s var(--ease-standard), opacity .2s var(--ease-standard);
+}
+.nav-link:hover::after,
+.nav-link:focus::after {
+  opacity: .9;
+  transform: scaleX(1);
+}
+
+/* —— 主按钮：轻微“弹出” + 阴影 —— */
+.btn-primary {
+  transform: translateZ(0);
+  box-shadow: 0 2px 6px rgba(13,110,253,.25); /* 浅色模式参考蓝阴影 */
+}
+.btn-primary:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 18px rgba(13,110,253,.25);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(.99);
+}
+
+/* 暗黑模式下的按钮阴影改用更柔和的蓝 */
+.dark-mode .btn-primary {
+  box-shadow: 0 2px 10px rgba(58,122,224,.28);
+}
+.dark-mode .btn-primary:hover {
+  box-shadow: 0 10px 26px rgba(58,122,224,.35);
+}
+
+/* —— 次要描边按钮：描边变亮 + 微弹 —— */
+.btn-outline-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.12);
+}
+.dark-mode .btn-outline-secondary:hover {
+  box-shadow: 0 8px 18px rgba(0,0,0,.45);
+}
+
+/* —— 输入框：聚焦光晕（已结合你现有颜色） —— */
+.form-control:focus {
+  transform: translateZ(0);
+}
+body:not(.dark-mode) .form-control:focus {
+  box-shadow: 0 0 0 .2rem rgba(13,110,253,.15), 0 6px 16px rgba(0,0,0,.08);
+}
+.dark-mode .form-control:focus {
+  box-shadow: 0 0 0 .25rem rgba(58,122,224,.25), 0 8px 22px rgba(0,0,0,.5);
+}
+
+/* —— 卡片头工具按钮（如“编辑”）更明显的 hover —— */
+.card .btn:not(.btn-primary):hover {
+  transform: translateY(-1px);
+}
+
+/* —— 可复用的工具类：想更强的动效时加上这些类 —— */
+.hover-raise:hover { transform: translateY(-3px); box-shadow: var(--elev-2); }
+.hover-pop:hover   { transform: translateY(-1px) scale(1.03); box-shadow: var(--elev-2); }
+.pressable:active  { transform: translateY(0) scale(.98); }
+
+/* —— 轻柔高亮动画：给需要“吸引注意”的元素加 .pulse-once —— */
+@keyframes soft-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(58,122,224,.0); }
+  40%  { box-shadow: 0 0 0 10px rgba(58,122,224,.12); }
+  100% { box-shadow: 0 0 0 0 rgba(58,122,224,.0); }
+}
+.pulse-once { animation: soft-pulse .8s var(--ease-standard) 1; }
+
+/* —— “浮动”展示卡（可选）：给重要卡片加 .float-on-hover —— */
+@keyframes subtle-float {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+.float-on-hover:hover { animation: subtle-float 1.6s ease-in-out infinite; }
+
+/* —— 尊重系统“减少动效”设置 —— */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+
+
+
+/* === 首页卡片的情绪条：增高 + 允许文本溢出显示 === */
+.sentiment-indicator .progress {
+  height: 16px !important;          /* 从默认 8~10px 提升到 16px，更易读 */
+  border-radius: 8px !important;
+  overflow: visible !important;      /* 让 .progress-text 不再被裁切 */
+  position: relative;
+}
+
+.sentiment-indicator .progress-bar {
+  line-height: 16px;                 /* 让条内的文字垂直居中（如果有） */
+}
+
+.sentiment-indicator .progress-text {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: .75rem;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dark-mode .sentiment-indicator .progress {
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+}

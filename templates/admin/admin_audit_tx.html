@@ -1,0 +1,6 @@
+<h5>链上日志查询</h5>
+{% if data.ok %}
+  <pre>{{ data.log | tojson(indent=2, ensure_ascii=False) }}</pre>
+{% else %}
+  <div class="alert alert-danger">查询失败：{{ data.err }}</div>
+{% endif %}

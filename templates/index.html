@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="galaxy-container">
+    <!-- 星空画布 -->
+    <canvas id="galaxy-canvas"></canvas>
+
+    <!-- 小王子3D模型 -->
+    <div id="prince-container"></div>
+
+    <!-- 隐藏的帖子数据 -->
+    {% for post in posts %}
+    <div class="post-data"
+         data-id="{{ post.id }}"
+         data-content="{{ post.content|truncate(20) }}"
+         data-sentiment="{{ 'positive' if post.get_sentiment().positive > 0.5 else 'negative' if post.get_sentiment().negative > 0.5 else 'neutral' }}"
+         data-date="{{ post.created_at.strftime('%Y-%m-%d') }}"
+         data-comments="{{ post.comments|length }}"
+         style="display:none;"></div>
+    {% endfor %}
+
+    <!-- 小王子家 (底部固定) -->
+    <div class="prince-home">
+        <div class="home-planet" id="home-planet">
+            <!-- 3D星球将通过JS加载 -->
+        </div>
+        <div class="home-elements">
+            <div class="home-element" data-target="new_post">
+                <div class="element-icon" id="rose"></div>
+                <span class="element-label"></span>
+            </div>
+            <div class="home-element" data-target="chatbot">
+                <div class="element-icon" id="fox"></div>
+                <span class="element-label"></span>
+            </div>
+            <div class="home-element" data-target="diary">
+                <div class="element-icon" id="tree"></div>
+                <span class="element-label"></span>
+            </div>
+            <div class="home-element" data-target="index">
+                <div class="element-icon" id="prince"></div>
+                <span class="element-label"></span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+// 初始化Three.js
+let galaxy;
+
+const newMessageBtn = document.getElementById('new-message-btn');
+if (newMessageBtn) {
+    newMessageBtn.addEventListener('click', async function () {
+        try {
+            const response = await fetch('/api/warm_messages/random');
+            if (response.ok) {
+                const data = await response.json();
+                const messageEl = document.querySelector('.galaxy-message');
+                if (messageEl) {
+                    messageEl.textContent = `"${data.message}"`;
+                }
+            }
+        } catch (error) {
+            console.error('获取暖心语失败:', error);
+        }
+    });
+}
+
+const zoomOutBtn = document.getElementById('zoom-out-btn');
+if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', function () {
+        if (typeof galaxy !== 'undefined' && galaxy.camera) {
+            galaxy.camera.position.z += 10;
+        }
+    });
+}
+
+const zoomInBtn = document.getElementById('zoom-in-btn');
+if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', function () {
+        if (typeof galaxy !== 'undefined' && galaxy.camera && galaxy.camera.position.z > 20) {
+            galaxy.camera.position.z -= 10;
+        }
+    });
+}
+
+
+// 高亮当前导航项
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.galaxy-nav-item');
+
+    navItems.forEach(item => {
+        if (item.getAttribute('href') === currentPath) {
+            item.classList.add('active');
+        }
+    });
+});
+
+// 等待Three.js加载
+function checkThreeJS() {
+    if (typeof THREE !== 'undefined') {
+        galaxy = new LittlePrinceGalaxy();
+
+    } else {
+        setTimeout(checkThreeJS, 100);
+    }
+}
+checkThreeJS();
+</script>
+{% endblock %}

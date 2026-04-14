@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h2><i class="bi bi-journal-text"></i> 使用条款</h2>
+    </div>
+    <div class="card-body">
+
+      <h4 class="mt-3">1. 服务说明</h4>
+      <p>本平台旨在提供匿名倾诉与支持资源，非医疗服务或诊断替代：</p>
+      <ul>
+        <li>匿名倾诉与同伴支持、心理健康资源检索。</li>
+        <li>可选 <strong>Tor</strong> 访问以增强网络匿名；支持（可选）上链审计。</li>
+        <li>管理员治理采用 <strong>零知识证明（ZK）</strong> 授权，无需传统账号口令。</li>
+      </ul>
+
+      <h4 class="mt-4">2. 用户义务</h4>
+      <ul>
+        <li>不发布身份识别信息、仇恨/暴力/违法内容、广告与垃圾信息。</li>
+        <li>不提供或传播误导性医疗建议；危机情形请立刻联系专业机构。</li>
+        <li>不得尝试去匿名化他人、不得攻击/探测本平台安全。</li>
+      </ul>
+
+      <h4 class="mt-4">3. 隐私与安全</h4>
+      <ul>
+        <li>平台以匿名为核心目标，但互联网环境无法保证“绝对匿名”。</li>
+        <li>如启用 Tor，仅表示出口匿名性增强；你的设备/网络仍应自我加固。</li>
+        <li>ZK 授权仅验证“私钥拥有权”，不等价于线下身份。</li>
+      </ul>
+
+      <h4 class="mt-4">4. 内容治理与上链</h4>
+      <ul>
+        <li>违规或经判定需要处置的内容可被删除或屏蔽。</li>
+        <li>治理动作可能写入区块链并生成 <strong>TxId</strong>，用于审计追溯；不包含明文内容。</li>
+        <li>你可通过 TxId 查询相应链上痕迹；链上数据具不可篡改性。</li>
+      </ul>
+
+      <h4 class="mt-4">5. 管理员与密钥</h4>
+      <ul>
+        <li>管理员通过登记 <strong>公钥</strong> 获得治理权限；须妥善保管私钥与轮换策略。</li>
+        <li>私钥遗失或泄露的风险由持有人自行承担；平台可撤销相应公钥的权限。</li>
+      </ul>
+
+      <h4 class="mt-4">6. 免责声明</h4>
+      <ul>
+        <li>平台不提供医疗诊疗或急救服务，不保证所有建议的准确性或适用性。</li>
+        <li>平台不对用户线下行为负责；对服务中断、数据丢失等在合理范围内免责。</li>
+      </ul>
+
+      <h4 class="mt-4">7. 危机资源</h4>
+      <p>遇到紧急情况请 <strong>立即</strong> 联系当地急救/心理援助机构；平台所列热线仅供参考。</p>
+
+      <h4 class="mt-4">8. 条款更新</h4>
+      <p>我们可能根据法律与功能变更更新本条款；继续使用即表示同意更新后的条款。</p>
+
+      <div class="alert alert-warning mt-4">
+        <i class="bi bi-exclamation-triangle"></i> 继续使用即表示您同意以上条款
+        <br>
+        <small>最后更新：{{ now.strftime('%Y-%m-%d') }}</small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

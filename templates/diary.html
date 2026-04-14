@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="bi bi-journal-bookmark"></i> 我的日记</h4>
+                </div>
+                <div class="card-body">
+                    <!-- 新建日记按钮 -->
+                    <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#newDiaryModal">
+                        <i class="bi bi-plus-lg"></i> 新建日记
+                    </button>
+
+                    <!-- 日记列表 -->
+                    <div class="list-group">
+                        {% for diary in diaries %}
+                        <a href="{{ url_for('view_diary', diary_id=diary.id) }}"
+                           class="list-group-item list-group-item-action {% if loop.first %}active{% endif %}">
+                           <div class="d-flex w-100 justify-content-between">
+                               <h6 class="mb-1">{{ diary.title }}</h6>
+                               <small>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const updatedTime = moment("{{ diary.updated_at }}").local().format('MM-DD');
+                                            document.getElementById('updated-time-{{ loop.index }}').textContent = updatedTime;
+                                        });
+                                    </script>
+                                    <span id="updated-time-{{ loop.index }}"></span>
+                               </small>
+                           </div>
+                            <p class="mb-1 text-truncate">{{ diary.content[:30] }}{% if diary.content|length > 30 %}...{% endif %}</p>
+                        </a>
+                        {% else %}
+                        <div class="alert alert-info">暂无日记，点击上方按钮创建第一篇日记</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            {% if diaries %}
+                {% set diary = diaries[0] %}
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>{{ diary.title }}</h4>
+                        <small>
+                            <time class="js-time" datetime="{{ diary.updated_at|iso_utc }}" data-style="date">
+                                {{ diary.updated_at|sh_time('%m-%d') }}  {# 无 JS 的兜底显示（上海时区） #}
+                            </time>
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <div class="diary-content" style="white-space: pre-line;">{{ diary.content }}</div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ url_for('view_diary', diary_id=diary.id) }}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-journal-text" style="font-size: 3rem; color: #6c757d;"></i>
+                        <h5 class="mt-3">您还没有日记</h5>
+                        <p class="text-muted">点击左侧"新建日记"按钮开始记录</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 新建日记模态框 -->
+<div class="modal fade" id="newDiaryModal" tabindex="-1" aria-labelledby="newDiaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="newDiaryModalLabel">新建日记</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('diary') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="diaryTitle" class="form-label">标题</label>
+                        <input type="text" class="form-control" id="diaryTitle" name="title" placeholder="请输入日记标题(可选)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="diaryContent" class="form-label">内容</label>
+                        <textarea class="form-control" id="diaryContent" name="content" rows="10" required placeholder="写下您今天的感受..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// 暗黑模式适配
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.body.classList.contains('dark-mode')) {
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.classList.add('bg-dark');
+            item.classList.add('border-secondary');
+        });
+    }
+
+    // 确保画布不拦截事件
+    const canvas = document.getElementById('galaxy-canvas');
+    if(canvas) {
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '-1';
+    }
+});
+</script>
+{% endblock %}

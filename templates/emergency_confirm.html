@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('emergency') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="bi bi-exclamation-triangle"></i> 紧急帮助</h4>
+            </div>
+            <div class="card-body text-center">
+                <h5 class="card-title mb-4">您需要紧急心理援助吗？</h5>
+                <p class="card-text mb-4">如果您正处于危机中或感到极度痛苦，我们可以为您提供专业帮助资源。</p>
+
+                <form method="POST" action="{{ url_for('emergency') }}">
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="bi bi-telephone"></i> 我需要紧急帮助
+                        </button>
+                        <a href="{{ url_for('resources') }}" class="btn btn-outline-secondary">
+                            查看常规支持资源
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+{% endblock %}

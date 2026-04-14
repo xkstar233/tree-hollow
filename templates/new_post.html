@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('new_post') }}" id="postForm" onsubmit="return finalCheck()">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="bi bi-chat-square-text"></i> 匿名倾诉</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="content" class="form-label">您的感受</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required
+                                  placeholder="在这里写下您的想法和感受..."
+                                  oninput="debounceCheck()"></textarea>
+                        <div class="form-text">您的所有信息都将被匿名处理，请放心分享</div>
+
+                        <!-- 实时检测反馈区域 -->
+                        <div id="contentFeedback" class="mt-2" style="display: none;">
+                            <div class="alert alert-danger" id="sensitiveAlert" style="display: none;">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <span id="sensitiveMessage"></span>
+                                <div id="sensitiveDetails" class="mt-2"></div>
+                            </div>
+                            <div class="alert alert-info" id="checkingAlert" style="display: none;">
+                                <i class="bi bi-hourglass-split"></i> 正在检查内容安全性...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-send"></i> 发布
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">取消</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-info-circle"></i> 内容审核说明</h5>
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-shield-exclamation"></i> 禁止内容类型</h6>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-x-circle text-danger"></i> 暴恐言论</li>
+                                    <li><i class="bi bi-x-circle text-danger"></i> 反动信息</li>
+                                    <li><i class="bi bi-x-circle text-danger"></i> 色情内容</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-x-circle text-danger"></i> 人身攻击</li>
+                                    <li><i class="bi bi-x-circle text-danger"></i> 虚假信息</li>
+                                    <li><i class="bi bi-x-circle text-danger"></i> 敏感政治</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-lightbulb"></i> 提示：系统使用AI实时分析内容安全性和情感倾向
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// 防抖计时器
+let debounceTimer = null;
+let isChecking = false;
+let lastSensitiveState = false;
+
+// 防抖检测函数
+function debounceCheck() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        checkContent();
+    }, 800); // 800ms防抖
+}
+
+// 内容检测函数
+async function checkContent() {
+    const content = $('#content').val().trim();
+    if (!content) {
+        $('#contentFeedback').hide();
+        lastSensitiveState = false;
+        return;
+    }
+
+    // 显示检测中状态
+    $('#checkingAlert').show();
+    $('#sensitiveAlert').hide();
+    $('#contentFeedback').show();
+    isChecking = true;
+
+    try {
+        const response = await fetch('/api/content/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ content: content })
+        });
+
+        const result = await response.json();
+
+        if (result.is_sensitive) {
+            // 显示详细的分类敏感词信息
+            showSensitiveAlert(result);
+            lastSensitiveState = true;
+        } else {
+            // 内容安全
+            $('#contentFeedback').hide();
+            lastSensitiveState = false;
+        }
+    } catch (error) {
+        console.error('检测失败:', error);
+        $('#sensitiveMessage').text('内容安全检查暂时不可用，请稍后再试');
+        $('#sensitiveDetails').hide();
+        $('#checkingAlert').hide();
+        $('#sensitiveAlert').show();
+        lastSensitiveState = false; // 出错时不阻止提交
+    } finally {
+        isChecking = false;
+    }
+}
+
+// 显示敏感词分类详情
+function showSensitiveAlert(result) {
+    let detailsHtml = '';
+
+    // 按分类组织显示
+    for (const [category, words] of Object.entries(result.details)) {
+        const displayedWords = words.slice(0, 3); // 每类最多显示3个词
+        const moreCount = words.length - displayedWords.length;
+
+        detailsHtml += `
+            <div class="sensitive-category mb-2">
+                <div class="fw-bold">${category}:</div>
+                <div class="ps-3">
+                    ${displayedWords.join('、')}
+                    ${moreCount > 0 ? `等${words.length}个敏感词` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    $('#sensitiveMessage').text(result.message || '检测到以下敏感内容');
+    $('#sensitiveDetails').html(detailsHtml);
+    $('#checkingAlert').hide();
+    $('#sensitiveAlert').show();
+}
+
+// 表单最终提交检查
+function finalCheck() {
+    if (isChecking) {
+        alert('内容正在检测中，请稍候...');
+        return false;
+    }
+
+    if (lastSensitiveState) {
+        $('#sensitiveAlert').addClass('animate__animated animate__headShake');
+        setTimeout(() => {
+            $('#sensitiveAlert').removeClass('animate__animated animate__headShake');
+        }, 1000);
+        return false;
+    }
+
+    return true;
+}
+</script>
+
+<style>
+/* 动画效果 */
+.animate__animated {
+    animation-duration: 1s;
+}
+.animate__headShake {
+    animation-name: headShake;
+}
+@keyframes headShake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+}
+
+/* 暗黑模式适配 */
+.dark-mode #sensitiveAlert {
+    background-color: #4a1c1c;
+    border-color: #842029;
+}
+.dark-mode #checkingAlert {
+    background-color: #1c2b4a;
+    border-color: #084298;
+}
+.dark-mode .sensitive-category {
+    border-left: 3px solid #dc3545;
+    padding-left: 10px;
+}
+
+/* 敏感词分类样式 */
+.sensitive-category {
+    border-left: 3px solid #dc3545;
+    padding-left: 10px;
+    margin-bottom: 8px;
+}
+.sensitive-category .fw-bold {
+    color: #dc3545;
+}
+</style>
+{% endblock %}

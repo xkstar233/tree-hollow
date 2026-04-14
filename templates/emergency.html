@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-danger mb-4">
+            <div class="card-header bg-danger text-white">
+                <h4><i class="bi bi-heart-pulse"></i> 紧急心理援助资源</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> 您的求助已记录，以下是可用的紧急资源
+                </div>
+
+                <div class="list-group">
+                    {% for resource in resources %}
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ resource.title }}</h5>
+                            <span class="badge bg-danger">24小时</span>
+                        </div>
+                        <p class="mb-1">{{ resource.description }}</p>
+                        <div class="mt-2">
+                            <a href="{{ resource.url }}" target="_blank" class="btn btn-sm btn-danger">
+                                <i class="bi bi-telephone"></i> 立即联系
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle"></i> 注意事项</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">您不是一个人，帮助就在身边</li>
+                    <li class="list-group-item">与专业人士交谈是勇敢的表现</li>
+                    <li class="list-group-item">您的隐私将受到保护</li>
+                    <li class="list-group-item">情况紧急时请直接拨打当地紧急电话</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
